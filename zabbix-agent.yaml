@@ -1,0 +1,41 @@
+---
+- name: Install Zabbix agent
+  hosts: web
+  become: true
+  vars:
+    pass_zabbixdb: zabbix
+
+  tasks:
+    - name: Add Zabbix repository
+      shell: wget https://repo.zabbix.com/zabbix/6.0/ubuntu/pool/main/z/zabbix-release/zabb>
+      args:
+        chdir: /tmp
+
+    - name: Install Zabbix package
+      shell: dpkg -i zabbix-release_6.0-6+ubuntu24.04_all.deb
+      args:
+        chdir: /tmp
+
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+
+    - name: Install Zabbix agent
+      apt:
+        name:
+          - zabbix-agent
+        state: present
+
+
+    - name: Copy Zabbix Agent config
+      template:
+        src: /home/user/zabbix_agentd.conf.j2
+        dest: /etc/zabbix/zabbix_agentd.conf
+      notify:
+        - restart zabbix-agent
+
+  handlers:
+    - name: restart zabbix-agent
+      service:
+        name: zabbix-agent
+        state: restarted
